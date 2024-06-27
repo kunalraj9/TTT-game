@@ -1,0 +1,119 @@
+import math
+
+AI_PLAYER = "X"
+HUMAN_PLAYER = "O"
+EMPTY = " "
+
+def print_board(board):
+    print("-------------")
+    for i in range(3):
+        print(f"| {board[3*i]} | {board[3*i+1]} | {board[3*i+2]} |")
+        print("-------------")
+
+def is_board_full(board):
+    return all(cell != EMPTY for cell in board)
+
+def check_win(board, player):
+    
+    for i in range(3):
+        if all(board[3*i + j] == player for j in range(3)):
+            return True
+    
+    for j in range(3):
+        if all(board[3*i + j] == player for i in range(3)):
+            return True
+    
+    if all(board[3*i + i] == player for i in range(3)):
+        return True
+    if all(board[3*i + 2 - i] == player for i in range(3)):
+        return True
+    return False
+
+def minimax(board, depth, alpha, beta, is_maximizing):
+    if check_win(board, AI_PLAYER):
+        return 1
+    if check_win(board, HUMAN_PLAYER):
+        return -1
+    if is_board_full(board):
+        return 0
+    
+    if is_maximizing:
+        max_eval = -math.inf
+        for i in range(9):
+            if board[i] == EMPTY:
+                board[i] = AI_PLAYER
+                eval = minimax(board, depth+1, alpha, beta, False)
+                board[i] = EMPTY
+                max_eval = max(max_eval, eval)
+                alpha = max(alpha, eval)
+                if beta <= alpha:
+                    break
+        return max_eval
+    else:
+        min_eval = math.inf
+        for i in range(9):
+            if board[i] == EMPTY:
+                board[i] = HUMAN_PLAYER
+                eval = minimax(board, depth+1, alpha, beta, True)
+                board[i] = EMPTY
+                min_eval = min(min_eval, eval)
+                beta = min(beta, eval)
+                if beta <= alpha:
+                    break
+        return min_eval
+
+
+def find_best_move(board):
+    best_eval = -math.inf
+    best_move = -1
+    
+    for i in range(9):
+        if board[i] == EMPTY:
+            board[i] = AI_PLAYER
+            eval = minimax(board, 0, -math.inf, math.inf, False)
+            board[i] = EMPTY
+            if eval > best_eval:
+                best_eval = eval
+                best_move = i
+    
+    return best_move
+
+
+def play_game():
+    board = [EMPTY] * 9
+    current_player = HUMAN_PLAYER if input("Do you want to go first? (y/n): ").strip().lower() == 'y' else AI_PLAYER
+    
+    while True:
+        print_board(board)
+        
+        if current_player == HUMAN_PLAYER:
+            while True:
+                human_move = int(input("Enter your move (0-8): "))
+                if board[human_move] == EMPTY:
+                    board[human_move] = HUMAN_PLAYER
+                    break
+                else:
+                    print("Invalid move. Try again.")
+            if check_win(board, HUMAN_PLAYER):
+                print_board(board)
+                print("You win!")
+                break
+        else:
+            ai_move = find_best_move(board)
+            board[ai_move] = AI_PLAYER
+            print(f"AI plays move: {ai_move}")
+            if check_win(board, AI_PLAYER):
+                print_board(board)
+                print("AI wins!")
+                break
+        
+        if is_board_full(board):
+            print_board(board)
+            print("It's a draw!")
+            break
+        
+        current_player = AI_PLAYER if current_player == HUMAN_PLAYER else HUMAN_PLAYER
+
+
+if __name__ == "__main__":
+    play_game()
